@@ -4,11 +4,6 @@ import requests
 import time
 from auto_job_applicator.db_utils import Database_connector
 
-# Set your OpenAI API key
-# TODO: secure these
-openai_api_key = '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'
-notion_api_key = 'secret_lOFUnUMWBn0fM77fj9RJT6YL3XCMaJQ35U6g7Qodu78'
-
 def get_job_insights(job_description):
     print('Getting job insights using OpenAI API')
     url = "https://api.openai.com/v1/chat/completions"
