@@ -2,6 +2,7 @@ import pickle
 import re
 import subprocess
 import time
+import yaml
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -233,6 +234,7 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
     search_jobs(driver, preferred_job_title)
     time.sleep(5)
 
+    # TODO: Add filters 
     # set_job_filters(driver, job_filters)
     # time.sleep(5)
 
@@ -243,19 +245,22 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
 
     return jobs
     
-# Pre-filtered LinkedIn jobs URL
-prefiltered_url = "https://www.linkedin.com/jobs/search/?currentJobId=3768267063&f_E=1%2C2&f_TPR=r2592000&f_WT=3%2C2&geoId=90009496&keywords=%22devops%20engineer%22&location=London%20Area%2C%20United%20Kingdom&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true"
-job_homepage_url = "https://www.linkedin.com/"
-email = 'benjaminmorton@live.co.uk'
-password = 'O0i9u8-link'
+linkedin_url = "https://www.linkedin.com/"
+
 preferred_job_title = 'DevOps Engineer'
 job_filters = {'experience_level': ['Entry Level']}
 
 if __name__ == "__main__":
     database_connector = Database_connector()
-
+    # Load credentials from creds.yaml
+    with open('creds.yaml', 'r') as file:
+        creds = yaml.safe_load(file)
+    
+    email = creds['LINKEDIN_EMAIL']
+    password = creds['LINKEDIN_PASSWORD']
+    
     jobs = master_scraper(
-        job_homepage_url, 
+        linkedin_url, 
         email, 
         password, 
         preferred_job_title,
