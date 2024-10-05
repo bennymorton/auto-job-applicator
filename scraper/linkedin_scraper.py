@@ -253,8 +253,7 @@ job_filters = {'experience_level': ['Entry Level']}
 if __name__ == "__main__":
     database_connector = Database_connector()
     # Load credentials from creds.yaml
-    with open('creds.yaml', 'r') as file:
-        creds = yaml.safe_load(file)
+    creds = database_connector.read_creds()
     
     email = creds['LINKEDIN_EMAIL']
     password = creds['LINKEDIN_PASSWORD']

@@ -1,0 +1,22 @@
+services:
+  linkedin_scraper:
+    build:
+      context: .
+      dockerfile: scraper/Dockerfile
+    volumes:
+      - ./creds.yaml:/app/creds.yaml  # Mount creds.yaml into the container
+    # environment:
+    #   - SCRAPER_API_KEY=${SCRAPER_API_KEY}  # You can set this in a .env file or directly here
+    # command: ["python", "linkedin_scraper.py"]
+  
+  openai_integration:
+    build:
+      context: .
+      dockerfile: openai_notion/Dockerfile
+    ports:
+      - "8080:8080"  # If you need access to port 8080
+    volumes:
+      - ./creds.yaml:/app/creds.yaml  # Mount creds.yaml into the container
+    # environment:
+    #   - OPENAI_API_KEY=${OPENAI_API_KEY}  # Securely pass OpenAI API key via environment variables
+    # command: ["python", "openai_integration.py"]

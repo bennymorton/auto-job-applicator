@@ -1,4 +1,4 @@
-# Stage 1: Build with cross-compilation support
+# Build with cross-compilation support
 FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
 # Main image
@@ -21,8 +21,10 @@ COPY /scraper/* /app
 
 COPY ../db_utils.py /app
 
+COPY ../creds.yaml /app
+
 RUN pip install --upgrade pip
 
 RUN pip install -r requirements.txt    
 
-CMD ["python", "linkedin_scraper.py"]       
+# CMD ["python", "linkedin_scraper.py"]       

@@ -2,9 +2,10 @@ import json
 import math
 import requests
 import time
+import yaml
 from auto_job_applicator.db_utils import Database_connector
 
-def get_job_insights(job_description):
+def get_job_insights(job_description, openai_api_key):
     print('Getting job insights using OpenAI API')
     url = "https://api.openai.com/v1/chat/completions"
 
@@ -84,7 +85,7 @@ def extract_new_data(database_connector):
     print('Found ' + str(len(new_jobs)) + ' new jobs')
     return new_jobs
 
-def send_to_notion(job):
+def send_to_notion(job, notion_api_key):
     print('Sending new job to notion')
     headers = {
         "Authorization": f"Bearer {notion_api_key}",
@@ -187,12 +188,14 @@ def send_to_notion(job):
 
 def main():
     database_connector = Database_connector()
+    # Load credentials from creds.yaml
+    creds = database_connector.read_creds()
 
     new_jobs = extract_new_data(database_connector)
 
     for job in new_jobs:
         print('New job: ', job['job_id'])
-        insights = get_job_insights(job['job_description'])
+        insights = get_job_insights(job['job_description'], creds['OPENAI_API_KEY'])
         interest = calculate_interest(insights, preferred_tech_stack, preferred_industries)
 
         # Add AI insights to job info
@@ -200,7 +203,7 @@ def main():
         job['progressive'] = insights['Progressive?']
         job['interest'] = interest
 
-        send_to_notion(job)
+        send_to_notion(job, creds['NOTION_API_KEY'])
 
         # In DB mark job as added to notion 
         job_id = job["job_id"]
@@ -208,7 +211,9 @@ def main():
         database_connector.query_db(sql_string)
         print("#############################")
 
-preferred_tech_stack = [
+
+if __name__ == "__main__":
+    preferred_tech_stack = [
     'Docker',
     'Terraform',
     'Kubernetes',
@@ -222,14 +227,15 @@ preferred_tech_stack = [
     'Spark',
     'Airflow',
     'AWS'
-]
-preferred_industries = [
-    'fintech',
-    'climate',
-    'telecommunications, media, and technology'
-]
 
-if __name__ == "__main__":
+    ]
+    preferred_industries = [
+        'fintech',
+        'climate',
+        'telecommunications, media, and technology'
+    ]
+
+    
     main()
 
 

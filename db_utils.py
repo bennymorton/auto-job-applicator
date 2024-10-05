@@ -6,10 +6,10 @@ class Database_connector:
     def __init__(self) -> None:
         pass
 
-    def read_db_creds(self):
-        with open('auto_job_applicator/db_creds.yaml', 'r') as db_creds_file:
-            db_creds = yaml.safe_load(db_creds_file)
-        return db_creds     
+    def read_creds(self):
+        with open('creds.yaml', 'r') as creds_file:
+            creds = yaml.safe_load(creds_file)
+        return creds     
 
     def init_db_engine(self):
         db_creds = self.read_db_creds()
