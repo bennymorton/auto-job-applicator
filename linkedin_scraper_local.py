@@ -132,20 +132,20 @@ def scrape_page(driver, database_connector):
     return jobs
 
 def load_cookies(driver):
-    # TODO: finish figuring out how to implement cookies successfully
     print('Attempting to load cookies to bypass full sign in')
-    cookies = pickle.load(open("/Users/benmorton/Desktop/project_files/auto_job_applicator/scraper/cookies.pkl", "rb"))
+    cookies = pickle.load(open("/Users/benmorton/Desktop/project_files/auto_job_applicator/dev/cookies.pkl", "rb"))
 
     for cookie in cookies:
         try:
-            cookie['sameSite'] = "None; Secure" # Apply cookies to cross-site requests as well
             driver.add_cookie(cookie)
-            print('Cookie added')
         except Exception as e:
             print('Failed to load cookie. Error: ', e)
-            continue
+            return False
     
-def login_to_linkedin(driver, email, password):
+    print('Cookies loaded')
+    return True
+    
+def login_to_linkedin(driver, email, password, cookies_loaded):
     # Check for 'Sign in with Google' blocking modal
     try:
         print('Looking for the Google sign in modal')
@@ -156,34 +156,36 @@ def login_to_linkedin(driver, email, password):
         )
         google_modal_close_button.click()
         print('Closing Google Sign in modal')
-
+        time.sleep(10)
+        driver.switch_to.default_content() # Switch back to the default context (not the iframe)
     except:
         print('Could not find Google Sign in modal')
-        pass
 
-    driver.switch_to.default_content() # Switch back to the default context (not the iframe)
     sign_in_button = driver.find_element(By.LINK_TEXT, "Sign in")
     sign_in_button.click()
     time.sleep(5) 
 
-    email_field = driver.find_element(By.ID, "username")
-    password_field = driver.find_element(By.ID, "password")    
-    email_field.send_keys(email)
-    password_field.send_keys(password)
+    # If cookies have been loaded successfully we should be on a different log in page, which doesnt require entering a username
+    if (cookies_loaded is True) and ("login" in driver.current_url):
+        pass
+    else:
+        email_field = driver.find_element(By.ID, "username")
+        email_field.send_keys(email)
 
+    password_field = driver.find_element(By.ID, "password")    
+    password_field.send_keys(password)
     sign_in_submit = driver.find_element(By.XPATH, "//button[@type='submit']")
     sign_in_submit.click()
-
     time.sleep(10)
 
     if "challenge" in driver.current_url:
         print("Verification Captcha occurred. Needs human intervention.")
     else:
         print('Successfully signed in!')
+
         # Get cookies and save into a pickle file
         cookies = driver.get_cookies()
-
-        with open('/Users/benmorton/Desktop/project_files/auto_job_applicator/scraper/cookies.pkl', 'wb') as file:
+        with open('/Users/benmorton/Desktop/project_files/auto_job_applicator/dev/cookies.pkl', 'wb') as file:
             pickle.dump(cookies, file)
 
 def search_jobs(driver, preferred_job_title):
@@ -199,6 +201,7 @@ def search_jobs(driver, preferred_job_title):
     jobs_search_input_box.send_keys(Keys.ENTER)
 
 def set_job_filters(driver, job_filters):
+    # TODO: complete
     experience_level = driver.find_element(By.ID, 'searchFilter_experience')
     experience_level.click()
     time.sleep(5)
@@ -213,22 +216,17 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
     catch_page_redirect(driver, url)
     time.sleep(10) 
     
-    # TODO: figure out cookies
-    # try:
-    #     load_cookies(driver, password)
-    # except Exception as e:
-    #     print('Failed to load cookies. Error: ')
-    #     print(e)
-    #     login_to_linkedin(driver, email, password)
-    #     time.sleep(5) 
+    cookies_loaded = load_cookies(driver)
+    time.sleep(10)
 
-    login_to_linkedin(driver, email, password)
+    login_to_linkedin(driver, email, password, cookies_loaded)
+    time.sleep(5) 
     
     search_jobs(driver, preferred_job_title)
     time.sleep(5)
 
-    # set_job_filters(driver, job_filters)
-    # time.sleep(5)
+    set_job_filters(driver, job_filters)
+    time.sleep(5)
 
     jobs = scrape_page(driver, database_connector)
     # TODO: build pagination function, repeat `scrape_page`
@@ -237,16 +235,18 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
 
     return jobs
     
-# Pre-filtered LinkedIn jobs URL
-prefiltered_url = "https://www.linkedin.com/jobs/search/?currentJobId=3768267063&f_E=1%2C2&f_TPR=r2592000&f_WT=3%2C2&geoId=90009496&keywords=%22devops%20engineer%22&location=London%20Area%2C%20United%20Kingdom&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true"
 job_homepage_url = "https://www.linkedin.com/"
-email = 'benjaminmorton@live.co.uk'
-password = 'O0i9u8-link'
 preferred_job_title = 'DevOps Engineer'
 job_filters = {'experience_level': ['Entry Level']}
 
 if __name__ == "__main__":
     database_connector = Database_connector()
+
+    # Load credentials from creds.yaml
+    creds = database_connector.read_creds()
+    
+    email = creds['LINKEDIN_EMAIL']
+    password = creds['LINKEDIN_PASSWORD']
 
     jobs = master_scraper(
         job_homepage_url, 
@@ -257,7 +257,7 @@ if __name__ == "__main__":
         database_connector
         )
 
-    # jobs = [
+    # dev_jobs = [
     #     {
     #         'job_id': "4",
     #         'job_title': "test",
@@ -278,4 +278,4 @@ if __name__ == "__main__":
     #     }
     # ]
 
-    print(database_connector.upload_to_db(jobs))
+    # print(database_connector.upload_to_db(jobs))
