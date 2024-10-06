@@ -2,6 +2,7 @@ import pickle
 import re
 import subprocess
 import time
+import traceback
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -9,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.firefox import GeckoDriverManager
 from auto_job_applicator.db_utils import Database_connector
 
@@ -133,7 +135,7 @@ def scrape_page(driver, database_connector):
 
 def load_cookies(driver):
     print('Attempting to load cookies to bypass full sign in')
-    cookies = pickle.load(open("/Users/benmorton/Desktop/project_files/auto_job_applicator/dev/cookies.pkl", "rb"))
+    cookies = pickle.load(open("/Users/benmorton/Desktop/project_files/auto_job_applicator/cookies.pkl", "rb"))
 
     for cookie in cookies:
         try:
@@ -185,27 +187,97 @@ def login_to_linkedin(driver, email, password, cookies_loaded):
 
         # Get cookies and save into a pickle file
         cookies = driver.get_cookies()
-        with open('/Users/benmorton/Desktop/project_files/auto_job_applicator/dev/cookies.pkl', 'wb') as file:
+        with open('/Users/benmorton/Desktop/project_files/auto_job_applicator/cookies.pkl', 'wb') as file:
             pickle.dump(cookies, file)
 
 def search_jobs(driver, preferred_job_title):
     jobs_button = driver.find_element(By.CSS_SELECTOR, "li.global-nav__primary-item:nth-child(3) > a:nth-child(1)")
     print('Navigating to jobs page')
     jobs_button.click()
-    time.sleep(10) 
-
-    jobs_search_input_box = driver.find_element(By.XPATH, "/html/body/div[7]/header/div/div/div/div[2]/div[2]/div/div/label/following-sibling::input[1]")
+    jobs_search_input_box = WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/header/div/div/div/div[2]/div[2]/div/div/label/following-sibling::input[1]"))
+        )
     jobs_search_input_box.click()
+    
     time.sleep(5)
     jobs_search_input_box.send_keys(preferred_job_title)
     jobs_search_input_box.send_keys(Keys.ENTER)
 
 def set_job_filters(driver, job_filters):
-    # TODO: complete
-    experience_level = driver.find_element(By.ID, 'searchFilter_experience')
-    experience_level.click()
-    time.sleep(5)
-    # workplace_type = driver.find_element(By.ID, 'searchFilter_workplaceType')
+    print('Setting job filters')
+   
+    def chosen_filters_loop(filter, filter_mapping, show_result_xpath):
+        WebDriverWait(driver, 60).until(
+            EC.element_to_be_clickable((By.ID, ('searchFilter_' + filter)))
+        ).click()
+
+        time.sleep(10)
+
+        for choice in job_filters[filter]:
+            dynamic_xpath = f"//*[@id='{filter_mapping[choice]}']/following-sibling::label[1]"
+            try:
+                element = WebDriverWait(driver, 60).until(
+                    EC.element_to_be_clickable((By.XPATH, dynamic_xpath))
+                        )
+                time.sleep(3)
+                element.click()
+                time.sleep(5)
+            except Exception as e:
+                print('Could not select filter for', filter, '-', choice)
+                print('Attempted XPATH:\n', dynamic_xpath)
+                print(repr(e))
+                traceback.print_exc()
+                pass
+
+        show_result = driver.find_element(By.XPATH, show_result_xpath)
+        show_result.click()
+
+    # Map dynamically inputted filters to corresponding CSS IDs
+    experience_mapping = {
+        'Internship': 'experience-1',
+        'Entry level': 'experience-2',
+        'Associate': 'experience-3',
+        'Mid-Senior level': 'experience-4',
+        'Directory': 'experience-5',
+        'Executive': 'experience-6'
+        }
+    experience_show_result_xpath = "/html/body/div[7]/div[3]/div[4]/section/div/section/div/div/div/ul/li[4]/div/div/div/div[1]/div/form/fieldset/div[2]/button[2]/span"
+
+    workplaceType_mapping = {
+        'On-site': 'workplaceType-1',
+        'Remote': 'workplaceType-2',
+        'Hybrid': 'workplaceType-3'
+    }
+    workplaceType_show_result_xpath = "/html/body/div[7]/div[3]/div[4]/section/div/section/div/div/div/ul/li[7]/div/div/div/div[1]/div/form/fieldset/div[2]/button[2]/span"
+     
+    # TODO: DRY this up
+    try:
+        chosen_filters_loop('experience', experience_mapping, experience_show_result_xpath)
+        print('Setting', job_filters['experience'], 'for experience')
+        time.sleep(5)
+    except:
+        print('Could not set experience filter')
+        traceback.print_exc()
+        pass
+    try:
+        chosen_filters_loop('workplaceType', workplaceType_mapping, workplaceType_show_result_xpath)
+        print('Setting', job_filters['workplaceType'], 'for workplace type')
+        time.sleep(5)
+    except:
+        print('Could not set workplace type filter')
+        traceback.print_exc()
+        pass
+
+    # TODO: finish ordering results by "Most Recent" (struggling to select "show results" button)
+    # all_filters = driver.find_element(By.XPATH, "//button[text()='All filters']")
+    # all_filters.click()
+    # most_recent = driver.find_element(By.XPATH, "//span[text()='Most recent']")
+    # most_recent.click()
+    # time.sleep(10)
+    # show_results = WebDriverWait(driver, 30).until(
+    #     EC.presence_of_element_located((By.XPATH, "//span[contains(text(), 'results')]"))
+    #         )
+    # show_results.click()
 
 def master_scraper(url, email, password, preferred_job_title, job_filters, database_connector):
     driver = get_driver()
@@ -220,7 +292,7 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
     time.sleep(10)
 
     login_to_linkedin(driver, email, password, cookies_loaded)
-    time.sleep(5) 
+    time.sleep(10)
     
     search_jobs(driver, preferred_job_title)
     time.sleep(5)
@@ -237,10 +309,17 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
     
 job_homepage_url = "https://www.linkedin.com/"
 preferred_job_title = 'DevOps Engineer'
-job_filters = {'experience_level': ['Entry Level']}
+job_filters = {
+    'experience': ['Entry level'], 
+    'workplaceType': ['Hybrid']
+    }
 
 if __name__ == "__main__":
     database_connector = Database_connector()
+    
+    creds = database_connector.read_creds()
+    email = creds['LINKEDIN_EMAIL']
+    password = creds['LINKEDIN_PASSWORD']
 
     # Load credentials from creds.yaml
     creds = database_connector.read_creds()
