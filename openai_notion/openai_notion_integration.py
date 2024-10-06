@@ -214,19 +214,19 @@ def main():
 
 if __name__ == "__main__":
     preferred_tech_stack = [
-    'Docker',
-    'Terraform',
-    'Kubernetes',
-    'Helm',
-    'Networking',
-    'Python',
-    'SQL',
-    'git',
-    'Databricks',
-    'Kafka',
-    'Spark',
-    'Airflow',
-    'AWS'
+        'Docker',
+        'Terraform',
+        'Kubernetes',
+        'Helm',
+        'Networking',
+        'Python',
+        'SQL',
+        'git',
+        'Databricks',
+        'Kafka',
+        'Spark',
+        'Airflow',
+        'AWS'
 
     ]
     preferred_industries = [
@@ -235,7 +235,6 @@ if __name__ == "__main__":
         'telecommunications, media, and technology'
     ]
 
-    
     main()
 
 
