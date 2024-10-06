@@ -293,7 +293,7 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
 
     login_to_linkedin(driver, email, password, cookies_loaded)
     time.sleep(10)
-
+    
     search_jobs(driver, preferred_job_title)
     time.sleep(5)
 
@@ -307,8 +307,6 @@ def master_scraper(url, email, password, preferred_job_title, job_filters, datab
 
     return jobs
     
-# Pre-filtered LinkedIn jobs URL
-prefiltered_url = "https://www.linkedin.com/jobs/search/?currentJobId=3768267063&f_E=1%2C2&f_TPR=r2592000&f_WT=3%2C2&geoId=90009496&keywords=%22devops%20engineer%22&location=London%20Area%2C%20United%20Kingdom&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true"
 job_homepage_url = "https://www.linkedin.com/"
 preferred_job_title = 'DevOps Engineer'
 job_filters = {
@@ -323,6 +321,12 @@ if __name__ == "__main__":
     email = creds['LINKEDIN_EMAIL']
     password = creds['LINKEDIN_PASSWORD']
 
+    # Load credentials from creds.yaml
+    creds = database_connector.read_creds()
+    
+    email = creds['LINKEDIN_EMAIL']
+    password = creds['LINKEDIN_PASSWORD']
+
     jobs = master_scraper(
         job_homepage_url, 
         email, 
@@ -332,7 +336,7 @@ if __name__ == "__main__":
         database_connector
         )
 
-    # jobs = [
+    # dev_jobs = [
     #     {
     #         'job_id': "4",
     #         'job_title': "test",
@@ -353,4 +357,4 @@ if __name__ == "__main__":
     #     }
     # ]
 
-    print(database_connector.upload_to_db(jobs))
+    # print(database_connector.upload_to_db(jobs))
