@@ -20,6 +20,7 @@ COPY linkedin_scraper.py /app/
 COPY openai_notion_integration.py /app/
 COPY db_utils.py /app/
 COPY requirements.txt /app/
+COPY cookies.pkl /app/
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt

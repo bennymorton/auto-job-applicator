@@ -136,7 +136,7 @@ def scrape_page(driver, database_connector):
 def load_cookies(driver):
     try:
         print('Attempting to load cookies to bypass full sign in')
-        cookies = pickle.load(open("cookies.pkl", "rb"))
+        cookies = pickle.load(open("/app/cookies.pkl", "rb"))
     except Exception as e:
         print(repr(e))
         return False
