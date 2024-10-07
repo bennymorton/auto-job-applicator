@@ -1,0 +1,8 @@
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Run scraper every day at midnight
+0 12 * * * python3 /app/scraper/linkedin_scraper.py >> /var/log/cron.log 2>&1
+
+# Run openai.py daily at midnight
+0 13 * * * python3 /app/openai_notion/openai_notion_integration.py >> /var/log/cron.log 2>&1

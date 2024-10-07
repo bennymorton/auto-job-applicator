@@ -2,8 +2,7 @@ import json
 import math
 import requests
 import time
-import yaml
-from auto_job_applicator.db_utils import Database_connector
+from db_utils import Database_connector
 
 def get_job_insights(job_description, openai_api_key):
     print('Getting job insights using OpenAI API')

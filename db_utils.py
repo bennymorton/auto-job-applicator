@@ -7,12 +7,12 @@ class Database_connector:
         pass
 
     def read_creds(self):
-        with open('creds.yaml', 'r') as creds_file:
+        with open('/app/creds/creds.yaml', 'r') as creds_file:
             creds = yaml.safe_load(creds_file)
         return creds     
 
     def init_db_engine(self):
-        db_creds = self.read_db_creds()
+        db_creds = self.read_creds()
 
         DATABASE_TYPE = db_creds['DATABASE_TYPE']
         DBAPI = db_creds['DBAPI']

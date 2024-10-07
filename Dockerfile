@@ -16,13 +16,13 @@ FROM --platform=linux/amd64 python:3.12-slim
 
 WORKDIR /app
 
-COPY scraper/linkedin_scraper.py . 
-COPY openai_notion/openai_notion_integration.py . 
-COPY db_utils.py .
+COPY linkedin_scraper.py /app/
+COPY openai_notion_integration.py /app/
+COPY db_utils.py /app/
+COPY requirements.txt /app/
 
 RUN pip install --upgrade pip && \
-    pip install -r scraper/requirements.txt && \
-    pip install -r openai/requirements.txt
+    pip install -r requirements.txt
 
 # Install Firefox and cron
 RUN apt-get update && \
