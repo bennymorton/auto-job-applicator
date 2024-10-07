@@ -12,7 +12,7 @@ class Database_connector:
         return creds     
 
     def init_db_engine(self):
-        db_creds = self.read_db_creds()
+        db_creds = self.read_creds()
 
         DATABASE_TYPE = db_creds['DATABASE_TYPE']
         DBAPI = db_creds['DBAPI']
