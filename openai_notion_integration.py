@@ -191,7 +191,6 @@ def main():
     creds = database_connector.read_creds()
 
     new_jobs = extract_new_data(database_connector)
-
     for job in new_jobs:
         print('New job: ', job['job_id'])
         insights = get_job_insights(job['job_description'], creds['OPENAI_API_KEY'])
