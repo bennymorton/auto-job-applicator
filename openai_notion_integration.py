@@ -12,7 +12,6 @@ def get_job_insights(job_description, openai_api_key):
     "Content-Type": "application/json",
     "Authorization": f"Bearer {openai_api_key}"
     }
-    # TODO: regulate industry to be from a set list
     data = {
         "model": "gpt-3.5-turbo",
         "messages": [
@@ -25,7 +24,7 @@ def get_job_insights(job_description, openai_api_key):
                 The JSON should be structured like this:
                     {{
                         "Progressive?": 'YES' or 'NO'. If yes, whether it was hybrid, remote working, or flexible working hours that qualified it.,
-                        "Industry": '<the industry>', 
+                        "Industry": '<the industry>', which must be one of the top-level UK SIC sectors, 
                         "Tech stack": [a list of the teck stack items],
                         "Required skills": [a list of the required skills]
                     }}
@@ -228,9 +227,9 @@ if __name__ == "__main__":
 
     ]
     preferred_industries = [
-        'fintech',
-        'climate',
-        'telecommunications, media, and technology'
+        'Professional, Scientific and Technical Activities',
+        'Financial and Insurance Activities',
+        'Electricity, Gas, Steam and Air Conditioning Supply'
     ]
 
     main()
