@@ -58,7 +58,7 @@ def catch_page_redirect(driver, url):
             driver.get(url)
             time.sleep(10)  
 
-def scrape_job(driver, job_card, database_connector):
+def scrape_job(driver, job_card, job_ids, database_connector):
     job_title_raw = job_card.find_element(By.CSS_SELECTOR, 'a.job-card-list__title').text.strip()
 
     # Use regular expressions to capture the repeating part
@@ -77,7 +77,8 @@ def scrape_job(driver, job_card, database_connector):
     sql_string = f"SELECT * FROM bens_jobs WHERE job_id = '{job_id}'"
     sql_output = database_connector.query_db(sql_string)
     row = sql_output.fetchone()
-    if row is None:
+    
+    if (row is None) and (job_id not in job_ids):
         print('Found new job: ', job_id)
         pass
     else:
@@ -104,9 +105,9 @@ def scrape_job(driver, job_card, database_connector):
     return job_dict
    
 def scrape_page(driver, database_connector):
-    # Initialize an empty list to hold job data
-    jobs = []
     time.sleep(20)
+    jobs = []
+    job_ids = []
     job_cards = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, 'jobs-search-results__list-item'))
     )
@@ -117,14 +118,14 @@ def scrape_page(driver, database_connector):
         try:
             job_card.click()  # Click on the job card to load the full job description and details
             time.sleep(10)  # Wait for the job details to load
-            job_dict = scrape_job(driver, job_card, database_connector)
+            job_dict = scrape_job(driver, job_card, job_ids, database_connector)
 
             if not job_dict:
                 continue
             else:
                 jobs.append(job_dict)
-
-            print(str(index + 1) + '. Scraped new job: ' + job_dict['job_title'] + ' at ' + job_dict['company_name'])
+                job_ids.append(job_dict['job_id'])
+                print(str(index + 1) + '. Scraped new job: ' + job_dict['job_title'] + ' at ' + job_dict['company_name'])
 
         except Exception as e:
             print(f"Error extracting job details: {e}")
@@ -336,25 +337,4 @@ if __name__ == "__main__":
         database_connector
         )
 
-    # dev_jobs = [
-    #     {
-    #         'job_id': "4",
-    #         'job_title': "test",
-    #         'company_name': "test",
-    #         'location': "test",
-    #         'job_link': "test",
-    #         'job_description': "Excellent opportunity for AWS DevOps Engineer to be part of our Cloud Infrastructure & Security services practice. Cognizant Infrastructure Services – Provides IT infrastructure & Cloud services for clients across industry verticals, including both Consulting/Professional and Managed Services, across Enterprise Computing, Cloud services, Security Services, DevOps, Data Centres, End User Computing, Service Desk, Network Services and Environment Management Services.\nCandidate should be eligible for SC clearance or SC cleared\n\nKey Responsibilities\n\n    Developing automation in Terraform for provisioning AWS cloud resources\n    Scripting silent installation of MSI packages\n    Provisioning AWS resources using Terraform pipeline\n    Installation of Bluecrest components, admin server, web server, Output manager and configuration on windows ec2\n    Automation of bluecrest components installation using PowerShell\n    To Manage and re-factor housekeeping scripts written in powershell, python.\n    Responsible to setup FTP service on windows server\n    Assisting other team members on common DevOps tasks\n\nKey Skills And Experience\n\n    Should have experience in AWS services EC2, S3, ECS, EKS\n    Should have experience in automation ,Terraform\n    Good experience in scripting using Powershell, Python\n    Experience in Jenkins, Ansible and similar tools\n    Good Stakeholder management skills\n\nAt Cognizant you will experience an exciting mix of innovation by design, creativity, collaboration, and efficiency within a framework of stimulating objectives and a passion for delivering the best to our customers.\n\nYou will be joining a network of some of the most creative, innovative, and dedicated people in the industry with ample opportunities to learn and develop your career.",
-    #         'in_notion': "FALSE"
-    #     },
-    #     {
-    #         'job_id': "5",
-    #         'job_title': "2",
-    #         'company_name': "2",
-    #         'location': "2",
-    #         'job_link': "2",
-    #         'job_description': "Excellent opportunity for AWS DevOps Engineer to be part of our Cloud Infrastructure & Security services practice. Cognizant Infrastructure Services – Provides IT infrastructure & Cloud services for clients across industry verticals, including both Consulting/Professional and Managed Services, across Enterprise Computing, Cloud services, Security Services, DevOps, Data Centres, End User Computing, Service Desk, Network Services and Environment Management Services.\nCandidate should be eligible for SC clearance or SC cleared\n\nKey Responsibilities\n\n    Developing automation in Terraform for provisioning AWS cloud resources\n    Scripting silent installation of MSI packages\n    Provisioning AWS resources using Terraform pipeline\n    Installation of Bluecrest components, admin server, web server, Output manager and configuration on windows ec2\n    Automation of bluecrest components installation using PowerShell\n    To Manage and re-factor housekeeping scripts written in powershell, python.\n    Responsible to setup FTP service on windows server\n    Assisting other team members on common DevOps tasks\n\nKey Skills And Experience\n\n    Should have experience in AWS services EC2, S3, ECS, EKS\n    Should have experience in automation ,Terraform\n    Good experience in scripting using Powershell, Python\n    Experience in Jenkins, Ansible and similar tools\n    Good Stakeholder management skills\n\nAt Cognizant you will experience an exciting mix of innovation by design, creativity, collaboration, and efficiency within a framework of stimulating objectives and a passion for delivering the best to our customers.\n\nYou will be joining a network of some of the most creative, innovative, and dedicated people in the industry with ample opportunities to learn and develop your career.",
-    #         'in_notion': "FALSE"
-    #     }
-    # ]
-
-    # print(database_connector.upload_to_db(jobs))
+    print(database_connector.upload_to_db(jobs))
