@@ -5,7 +5,8 @@ Some of the job descriptions are literally thousands of lines long, others are t
 
 ***It's about time someone automated this process.***
 
-This project is designed to scrape jobs from LinkedIn of a pre-defined title and filter selection, then feed that information through the OpenAI API to gather deeper insights and summarise the hefty job descriptions. This data is then sent via the Notion API to a Notion database, to utilise Notion's customisability.
+This project is designed to scrape jobs from LinkedIn of a pre-defined title and filter selection, then load that data into an AWS RDS database. 
+Separately, a script then feeds that data from the database through the OpenAI API to gather deeper insights and summarise the hefty job descriptions. This data is then sent via the Notion API to a Notion database, to utilise Notion's customisability.
 
 ## Update Log
 ### V0.0.2
@@ -13,7 +14,7 @@ better job filters
 
 ### V0.0.1
 Cronjob which runs every night and scrapes new jobs, followed by second cron job which pulls new jobs from db and loads into notion
-- cookies (check other github linkedin scrapers)
+- cookies 
 
 ### V0.0.0
 **Collect relevant jobs, then collate and display them in a format where i can give a no/no-go for each, with minimal friction**
