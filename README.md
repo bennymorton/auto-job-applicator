@@ -8,18 +8,19 @@ Some of the job descriptions are literally thousands of lines long, others are t
 This project is designed to scrape jobs from LinkedIn of a pre-defined title and filter selection, then feed that information through the OpenAI API to gather deeper insights and summarise the hefty job descriptions. This data is then sent via the Notion API to a Notion database, to utilise Notion's customisability.
 
 ## Update Log
+### V0.0.2
+better job filters
+
+### V0.0.1
+Cronjob which runs every night and scrapes new jobs, followed by second cron job which pulls new jobs from db and loads into notion
+- cookies (check other github linkedin scrapers)
+
 ### V0.0.0
 **Collect relevant jobs, then collate and display them in a format where i can give a no/no-go for each, with minimal friction**
 - ’interest’ figure calculated and displayed, informed by:
   - progressive workplace (hybrid/remote/flexible working hours)
   - aligned stack
   - preferred industry
-
-#### V0.0.1
-Cronjob which runs every night and scrapes new jobs, followed by second cron job which pulls new jobs from db and loads into notion
-- cookies (check other github linkedin scrapers)
-#### V0.0.2
-better job filters
 
 ## Roadmap
 **V0.1:**
@@ -42,7 +43,7 @@ better job filters
 - [ ] Implement some more sophisticated logging. Instead of just print statements.
 
 ### Scraper
-- [ ]figure out how to get posted_date for jobs after they have been changed to 'Viewed' (the time tag seems to disappear)
+- [ ] figure out how to get posted_date for jobs after they have been changed to 'Viewed' (the time tag seems to disappear)
     `posted_date = driver.find_element(By.CSS_SELECTOR, 'time').get_attribute('datetime')`
 - [ ] build pagination function, then loop `scrape_page()`
 - [ ] finish ordering results by "Most Recent" (struggling to select "show results" button)
