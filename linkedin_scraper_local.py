@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.firefox import GeckoDriverManager
-from db_utils import Database_connector
+from auto_job_applicator.db_utils import Database_connector
 
 
 def get_driver():
@@ -28,7 +28,7 @@ def get_driver():
         print(f"Error fetching FirefoxDriver version: {e}")
 
     options = Options()
-    options.add_argument('--headless') 
+    # options.add_argument('--headless') 
     options.add_argument('--no-sandbox') 
     options.add_argument('--disable-dev-shm-usage') 
     options.add_argument("--enable-logging")
@@ -58,7 +58,7 @@ def catch_page_redirect(driver, url):
             driver.get(url)
             time.sleep(10)  
 
-def scrape_job(driver, job_card, database_connector):
+def scrape_job(driver, job_card, job_ids, database_connector):
     job_title_raw = job_card.find_element(By.CSS_SELECTOR, 'a.job-card-list__title').text.strip()
 
     # Use regular expressions to capture the repeating part
@@ -77,7 +77,8 @@ def scrape_job(driver, job_card, database_connector):
     sql_string = f"SELECT * FROM bens_jobs WHERE job_id = '{job_id}'"
     sql_output = database_connector.query_db(sql_string)
     row = sql_output.fetchone()
-    if row is None:
+    
+    if (row is None) and (job_id not in job_ids):
         print('Found new job: ', job_id)
         pass
     else:
@@ -106,6 +107,7 @@ def scrape_job(driver, job_card, database_connector):
 def scrape_page(driver, database_connector):
     # Initialize an empty list to hold job data
     jobs = []
+    job_ids = []
     time.sleep(20)
     job_cards = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, 'jobs-search-results__list-item'))
@@ -117,14 +119,14 @@ def scrape_page(driver, database_connector):
         try:
             job_card.click()  # Click on the job card to load the full job description and details
             time.sleep(10)  # Wait for the job details to load
-            job_dict = scrape_job(driver, job_card, database_connector)
+            job_dict = scrape_job(driver, job_card, job_ids, database_connector)
 
             if not job_dict:
                 continue
             else:
                 jobs.append(job_dict)
-
-            print(str(index + 1) + '. Scraped new job: ' + job_dict['job_title'] + ' at ' + job_dict['company_name'])
+                job_ids.append(job_dict['job_id'])
+                print(str(index + 1) + '. Scraped new job: ' + job_dict['job_title'] + ' at ' + job_dict['company_name'])
 
         except Exception as e:
             print(f"Error extracting job details: {e}")
@@ -134,12 +136,8 @@ def scrape_page(driver, database_connector):
     return jobs
 
 def load_cookies(driver):
-    try:
-        print('Attempting to load cookies to bypass full sign in')
-        cookies = pickle.load(open("/app/cookies.pkl", "rb"))
-    except Exception as e:
-        print(repr(e))
-        return False
+    print('Attempting to load cookies to bypass full sign in')
+    cookies = pickle.load(open("/Users/benmorton/Desktop/project_files/auto_job_applicator/cookies.pkl", "rb"))
 
     for cookie in cookies:
         try:
@@ -191,7 +189,7 @@ def login_to_linkedin(driver, email, password, cookies_loaded):
 
         # Get cookies and save into a pickle file
         cookies = driver.get_cookies()
-        with open('cookies.pkl', 'wb') as file:
+        with open('/Users/benmorton/Desktop/project_files/auto_job_applicator/cookies.pkl', 'wb') as file:
             pickle.dump(cookies, file)
 
 def search_jobs(driver, preferred_job_title):
@@ -321,8 +319,13 @@ job_filters = {
 if __name__ == "__main__":
     database_connector = Database_connector()
     
+    creds = database_connector.read_creds()
+    email = creds['LINKEDIN_EMAIL']
+    password = creds['LINKEDIN_PASSWORD']
+
     # Load credentials from creds.yaml
     creds = database_connector.read_creds()
+    
     email = creds['LINKEDIN_EMAIL']
     password = creds['LINKEDIN_PASSWORD']
 
