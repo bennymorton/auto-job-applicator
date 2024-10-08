@@ -7,7 +7,7 @@ class Database_connector:
         pass
 
     def read_creds(self):
-        with open('creds.yaml', 'r') as creds_file:
+        with open('/app/creds/creds.yaml', 'r') as creds_file:
             creds = yaml.safe_load(creds_file)
         return creds     
 

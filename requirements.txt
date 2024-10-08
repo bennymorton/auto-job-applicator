@@ -1,8 +1,5 @@
-# for scraper
 selenium==4.25.0
 webdriver_manager==4.0.2
-
-# for db_utils
-
 PyYAML==6.0.2
 SQLAlchemy==2.0.35
+Requests==2.32.3
