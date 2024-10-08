@@ -26,7 +26,7 @@ def get_job_insights(job_description, openai_api_key):
                 The JSON should be structured like this:
                     {{
                         "Progressive?": 'YES' or 'NO'. If yes, whether it was hybrid, remote working, or flexible working hours that qualified it.,
-                        "Industry": '<the industry>', 
+                        "Industry": The name of the top-level UK SIC sector that the company falls into, so "Financial and Insurance Activities" for example, nothing more granular, 
                         "Tech stack": [a list of the teck stack items],
                         "Required skills": [a list of the required skills]
                     }}
@@ -49,16 +49,14 @@ def get_job_insights(job_description, openai_api_key):
         print(response.text)
 
 def calculate_interest(insights, preferred_tech_stack, preferred_industries):
-    print('Calculating job interest')
     interest = 1
 
-    # Count how many items in the jobs stack are in the preferred stack
+    # Count how many items in the job's stack are in the preferred stack. Add interest point if more than 50%
     job_tech_stack_cleaned = [item.lower().strip() for item in insights['Tech stack']]
     preferred_tech_stack_cleaned = [item.lower().strip() for item in preferred_tech_stack]
     matches = [tool for tool in job_tech_stack_cleaned if tool in preferred_tech_stack_cleaned] # TODO: use this later in the notion page content
     stack_match_perc = math.floor((len(matches) / len(preferred_tech_stack_cleaned)) * 100)
-
-    if stack_match_perc > 50: # adjust interest figure accordingly
+    if stack_match_perc > 50:
         interest += 1
 
     # Match the industry of the job to the preferred industries
@@ -85,7 +83,7 @@ def extract_new_data(database_connector):
     print('Found ' + str(len(new_jobs)) + ' new jobs')
     return new_jobs
 
-def send_to_notion(job, notion_api_key):
+def send_to_notion(job, insights, notion_api_key):
     print('Sending new job to notion')
     headers = {
         "Authorization": f"Bearer {notion_api_key}",
@@ -163,8 +161,82 @@ def send_to_notion(job, notion_api_key):
         print(f"Error: {new_page_response.status_code}")
         print(new_page_response.text)
 
-    # TODO: make this easily glancable job info look pretty in notion
-    # page_info = str(json_insights['Tech stack']) + "\n" + str(json_insights['Required skills'])
+    tech_stack = ', '.join(insights['Tech stack'])
+    required_skills = ', '.join(insights['Required skills'])
+    update_job_payload = f"""{{
+        "children": [
+		    {{
+                "object": "block",
+			    "type": "paragraph",
+			    "paragraph": {{
+				    "rich_text": [
+                        {{
+                            "type": "text", 
+                            "text": {{
+                                "content": "Tech stack: "
+                                }},
+                            "annotations": {{
+                                "bold": true,
+                                "italic": false,
+                                "strikethrough": false,
+                                "underline": false,
+                                "code": false,
+                                "color": "default"
+                            }}
+                        }},
+                        {{
+                            "type": "text", 
+                            "text": {{"content": "{tech_stack}"}},
+                            "annotations": {{
+                                "bold": false,
+                                "italic": false,
+                                "strikethrough": false,
+                                "underline": false,
+                                "code": false,
+                                "color": "default"
+                            }}
+                        }}
+                    
+                    ]
+			    }}
+		    }},
+            {{
+                "object": "block",
+			    "type": "paragraph",
+			    "paragraph": {{
+				    "rich_text": [
+                        {{
+                            "type": "text", 
+                            "text": {{
+                                "content": "Required skills: "
+                                }},
+                            "annotations": {{
+                                "bold": true,
+                                "italic": false,
+                                "strikethrough": false,
+                                "underline": false,
+                                "code": false,
+                                "color": "default"
+                            }}
+                        }},
+                        {{
+                            "type": "text", 
+                            "text": {{"content": "{required_skills}"}},
+                            "annotations": {{
+                                "bold": false,
+                                "italic": false,
+                                "strikethrough": false,
+                                "underline": false,
+                                "code": false,
+                                "color": "default"
+                            }}
+                        }}
+                    
+                    ]
+			    }}
+		    }}
+        ]
+    }}"""
     # update_job_payload = f"""{{
     #     "children": [
 	# 	    {{
@@ -174,17 +246,18 @@ def send_to_notion(job, notion_api_key):
 	# 			    "rich_text": [
     #                     {{
     #                         "type": "text", 
-    #                         "text": {{"content": "{page_info}"}}
+    #                         "text": {{"content": "['Test']"}}
     #                     }}
     #                 ]
 	# 		    }}
 	# 	    }}
     #     ]
     # }}"""
-    # block_url = f"https://api.notion.com/v1/blocks/{job_page_id}/children"
-    # print(block_url)
-    # update_page_response = requests.patch(block_url, headers=headers, data=update_job_payload)
-    # print(update_page_response.text)
+    print(update_job_payload)
+    new_page_id = new_page_response.json()['id']
+    block_url = f"https://api.notion.com/v1/blocks/{new_page_id}/children"
+    update_page_response = requests.patch(block_url, headers=headers, data=update_job_payload)
+    print(update_page_response.text)
 
 def main():
     database_connector = Database_connector()
@@ -202,8 +275,8 @@ def main():
         job['industry'] = insights['Industry']
         job['progressive'] = insights['Progressive?']
         job['interest'] = interest
-
-        send_to_notion(job, creds['NOTION_API_KEY'])
+        
+        send_to_notion(job, insights, creds['NOTION_API_KEY'])
 
         # In DB mark job as added to notion 
         job_id = job["job_id"]
@@ -226,7 +299,9 @@ if __name__ == "__main__":
         'Kafka',
         'Spark',
         'Airflow',
-        'AWS'
+        'AWS',
+        'git',
+
 
     ]
     preferred_industries = [
