@@ -8,6 +8,21 @@ Some of the job descriptions are literally thousands of lines long, others are t
 This project is designed to scrape jobs from LinkedIn of a pre-defined title and filter selection, then load that data into an AWS RDS database. 
 Separately, a script then feeds that data from the database through the OpenAI API to gather deeper insights and summarise the hefty job descriptions. This data is then sent via the Notion API to a Notion database, to utilise Notion's customisability.
 
+## Roadmap
+### V0.1 (phase 0)
+- **V0.1.0:** Containerised scripts which run from EC2 instance, meaning entire setup is fully contained in the cloud
+- **V0.2.0:** pagination
+- **V0.3.0:** tested and fine-tuned interest calculation. separate signal from noise
+
+### V1 (phase 1)
+- apply to each job with a custom CV and optional cover letter tailored to the tools, processes and skills required for the job
+- send outreach messages to relevant linkedin recruiters/HMs
+
+### V2 (phase 2)
+- *scale.*
+- modify scraper to get all jobs, not personally filtered
+- modify openai-notion integration to pull only relevant ones to a set of personal filters 
+
 ## Update Log
 ### V0.0.2
 better job filters
@@ -22,21 +37,6 @@ Cronjob which runs every night and scrapes new jobs, followed by second cron job
   - progressive workplace (hybrid/remote/flexible working hours)
   - aligned stack
   - preferred industry
-
-## Roadmap
-**V0.1:**
-- **V0.1.0:** Containerised scripts which run from EC2 instance, meaning entire setup is fully contained in the cloud
-- **V0.2.0:** pagination
-- **V0.3.0:** tested and fine-tuned interest calculation. separate signal from noise
-
-### V1
-- apply to each job with a custom CV and optional cover letter tailored to the tools, processes and skills required for the job
-- send outreach messages to relevant linkedin recruiters/HMs
-
-### V2
-- *scale.*
-- modify scraper to get all jobs, not personally filtered
-- modify openai-notion integration to pull only relevant ones to a set of personal filters 
 
 ## To-Dos
 ### General
