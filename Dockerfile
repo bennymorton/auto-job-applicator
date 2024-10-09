@@ -1,17 +1,3 @@
-### Extra stuff to build with cross-platform support ###
-# FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
-
-# Install xx scripts
-# COPY --from=xx / /
-
-# Use xx-apt-get for target-aware package installation
-# ARG TARGETPLATFORM
-# Install firefox
-# RUN xx-apt-get update && \
-#     xx-apt install firefox-esr -y && \
-#     rm -rf /var/lib/apt/lists/* 
-
-
 FROM --platform=linux/amd64 python:3.12-slim
 
 WORKDIR /app
